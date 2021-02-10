@@ -8,14 +8,14 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "...",
+	Use:     "hello",
 	Short:   "rootCommand",
 	Version: "v1.1.1",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("create <resource> name")
-		fmt.Println("get <resource> name")
-		fmt.Println("delete <resource> name")
-	},
+	//Run: func(cmd *cobra.Command, args []string) {
+	//	fmt.Println("create <resource> name")
+	//	fmt.Println("get <resource> name")
+	//	fmt.Println("delete <resource> name")
+	//},
 }
 
 func Execute() {

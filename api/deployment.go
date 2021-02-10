@@ -4,14 +4,31 @@ import (
 	"context"
 	"fmt"
 
+	v1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 )
 
-func CreateDelployment() {
-	deploymentsClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
+type Dep struct {
+	DeploymentClient v1.DeploymentInterface
+}
+
+//func (dep dep) init() {
+//	deploymentsClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
+//	dep := dep{
+//		deploymentClient: deploymentsClient,
+//	}
+//}
+//var deploymentsClient = GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
+
+func (d Dep) CreateDelployment() {
+
+	//dep := dep{
+	//	deploymentClient: deploymentsClient,
+	//}
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -48,22 +65,22 @@ func CreateDelployment() {
 			},
 		},
 	}
-	result, err := deploymentsClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
+	result, err := d.DeploymentClient.Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(result.GetObjectMeta().GetName())
 }
-func UpdateDeployment() {
-	deploymentsClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
+func (d Dep) UpdateDeployment() {
+	//deploymentsClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		result, getErr := deploymentsClient.Get(context.TODO(), "demo-deployment", metav1.GetOptions{})
+		result, getErr := d.DeploymentClient.Get(context.TODO(), "demo-deployment", metav1.GetOptions{})
 		if getErr != nil {
 			panic(fmt.Errorf("failed to get latest version of deployment %v ", getErr))
 		}
 		result.Spec.Replicas = intPtr(3)
 		result.Spec.Template.Spec.Containers[0].Image = "nginx:1.13"
-		_, updateErr := deploymentsClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		_, updateErr := d.DeploymentClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
 	if retryErr != nil {
@@ -71,9 +88,9 @@ func UpdateDeployment() {
 	}
 
 }
-func GetDeployment() {
-	deploymentClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
-	list, err := deploymentClient.List(context.TODO(), metav1.ListOptions{})
+func (d Dep) GetDeployment() {
+	//deploymentClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
+	list, err := d.DeploymentClient.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -81,10 +98,10 @@ func GetDeployment() {
 		fmt.Printf("* %s (%d replicas)\n", d.Name, *d.Spec.Replicas)
 	}
 }
-func DeleteDeployment() {
-	deploymentClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
+func (d Dep) DeleteDeployment() {
+	//deploymentClient := GetClientSet().AppsV1().Deployments(apiv1.NamespaceDefault)
 	deletePolicy := metav1.DeletePropagationForeground
-	if err := deploymentClient.Delete(context.TODO(), "demo-deployment", metav1.DeleteOptions{
+	if err := d.DeploymentClient.Delete(context.TODO(), "demo-deployment", metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	}); err != nil {
 		panic(err)
